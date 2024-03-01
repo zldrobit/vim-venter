@@ -13,6 +13,10 @@ if !exists(":VenterClose")
 	command -nargs=0 VenterClose :call VenterClose()
 endif
 
+if !exists(":VenterOnlyWindow")
+	command -nargs=0 VenterOnlyWindow :call VenterOnlyWindow()
+endif
+
 function! venter#Venter()
 	if exists("t:venter_tabid") && has_key(s:open_winids, t:venter_tabid)
 		return
@@ -38,6 +42,10 @@ function! venter#Venter()
 	execute 'let s:open_winids.'.t:venter_tabid.' = [l:left_winid, l:right_winid]'
 
 	if len(s:open_winids) == 1
+		if exists("g:venter_map_only_window") && g:venter_map_only_window
+			nnoremap <silent> <C-W>o :call VenterOnlyWindow()<CR>
+			nnoremap <silent> <C-W><C-O> :call VenterOnlyWindow()<CR>
+		endif
 		augroup venter
 			autocmd VimResized,TabEnter,WinEnter * call s:ResizeWindows()
 			if exists('##SafeState')
@@ -71,8 +79,26 @@ function! VenterClose()
 		execute 'unlet s:open_winids.'.t:venter_tabid
 		unlet t:venter_tabid
 	endif
+	if exists("g:venter_map_only_window") && g:venter_map_only_window
+		nunmap <C-W>o
+		nunmap <C-W><C-O>
+	endif
 
 	call s:CheckWinIds()
+endfunction
+
+function! VenterOnlyWindow()
+	" Close all windows except current and padding windows
+	if exists("t:venter_tabid") && has_key(s:open_winids, t:venter_tabid)
+		let l:cur_winid = win_getid()
+		execute 'let l:winids = deepcopy(s:open_winids.'.t:venter_tabid.')'
+		for idx in gettabinfo(tabpagenr())[0].windows
+			if idx != l:cur_winid && index(l:winids, idx) < 0
+				let l:winnr = win_id2win(idx)
+				execute l:winnr . 'wincmd c'
+			endif
+		endfor
+	endif
 endfunction
 
 function! s:CheckWinIds()
