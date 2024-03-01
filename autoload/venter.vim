@@ -79,10 +79,12 @@ function! s:CheckWinIds()
 	" Check the winids for padding windows in the current tab - remove if no longer valid
 	if exists("t:venter_tabid") && has_key(s:open_winids, t:venter_tabid)
 		execute 'let l:winids = deepcopy(s:open_winids.'.t:venter_tabid.')'
+		let l:nr_rm = 0
 		for idx in range(0, len(l:winids)-1)
 			let l:winnr = win_id2win(l:winids[idx])
 			if !l:winnr
-				execute 'call remove(s:open_winids.'.t:venter_tabid.', '.idx.')'
+				execute 'call remove(s:open_winids.'.t:venter_tabid.', '.(idx - l:nr_rm).')'
+				let l:nr_rm += 1
 			endif
 		endfor
 	endif
