@@ -47,7 +47,7 @@ function! venter#Venter()
 			nnoremap <silent> <C-W><C-O> :call VenterOnlyWindow()<CR>
 		endif
 		augroup venter
-			autocmd VimResized,TabEnter,WinEnter * call s:ResizeWindows()
+			autocmd VimResized,TabEnter,WinEnter * call timer_start(0, {-> s:ResizeWindows()})
 			if exists('##SafeState')
 				autocmd SafeState * call s:DisableStatuslines()
 			else
